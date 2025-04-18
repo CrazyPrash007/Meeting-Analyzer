@@ -17,8 +17,8 @@ router = APIRouter(prefix="/api/transcriptions", tags=["transcriptions"])
 # Create upload directory if it doesn't exist
 os.makedirs("uploads", exist_ok=True)
 
-# Configure which ASR provider to use (whisper or alibaba)
-ASR_PROVIDER = os.getenv("ASR_PROVIDER", "whisper")
+# ASR provider is now always Alibaba
+ASR_PROVIDER = "alibaba"
 
 
 @router.post("/", response_model=TranscriptionResponse)
@@ -35,8 +35,8 @@ async def create_transcription(
     with open(file_path, "wb") as buffer:
         buffer.write(await audio_file.read())
     
-    # Initialize the transcription service with the configured provider
-    transcription_service = TranscriptionService(provider=ASR_PROVIDER)
+    # Initialize the transcription service with Alibaba provider
+    transcription_service = TranscriptionService()
     
     # Process transcription in the background
     background_tasks.add_task(
