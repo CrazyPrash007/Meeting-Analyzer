@@ -19,22 +19,18 @@ class TranscriptionService:
         # Initialize Alibaba ASR if selected
         if provider == "alibaba":
             # Get credentials from environment variables
-            access_key_id = os.getenv("ALIBABA_ACCESS_KEY_ID")
-            access_key_secret = os.getenv("ALIBABA_ACCESS_KEY_SECRET")
             app_key = os.getenv("ALIBABA_ASR_APP_KEY")
-            region = os.getenv("ALIBABA_REGION", "cn-shanghai")
+            access_token = os.getenv("ALIBABA_ASR_TOKEN")
             
-            if not all([access_key_id, access_key_secret, app_key]):
+            if not all([app_key, access_token]):
                 raise ValueError(
-                    "Missing Alibaba credentials. Please set ALIBABA_ACCESS_KEY_ID, "
-                    "ALIBABA_ACCESS_KEY_SECRET, and ALIBABA_ASR_APP_KEY environment variables."
+                    "Missing Alibaba credentials. Please set ALIBABA_ASR_APP_KEY and "
+                    "ALIBABA_ASR_TOKEN environment variables."
                 )
             
             self.alibaba_asr = AlibabaASR(
-                access_key_id=access_key_id,
-                access_key_secret=access_key_secret,
                 app_key=app_key,
-                region=region
+                access_token=access_token
             )
             
         # For Whisper, we'll load the model on demand to save memory
