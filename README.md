@@ -54,8 +54,8 @@ meeting-analyzer/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/meeting-analyzer.git
-cd meeting-analyzer
+git clone https://github.com/CrazyPrash007/Multilingual-Note-Taking.git
+cd Meeting-Analyzer
 ```
 
 ### 2. Backend Setup
