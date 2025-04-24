@@ -1,38 +1,18 @@
-import os
-from fastapi import FastAPI, File, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 import uvicorn
-from dotenv import load_dotenv
+from fastapi import FastAPI
+from app.api.meetings import router
+import os
+from app.core.config import settings
 
-# Load environment variables from .env file
-load_dotenv()
-
-from api.routes import transcription_router
-from database.database import init_db
-
-app = FastAPI(title="Multilingual Meeting Note Taker")
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = FastAPI()
 
 # Include routers
-app.include_router(transcription_router.router)
+app.include_router(router, prefix="/api")
 
-# Initialize database on startup
-@app.on_event("startup")
-async def startup():
-    await init_db()
-
-# Mount uploads directory
-os.makedirs("uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+# Ensure data directory exists
+os.makedirs(settings.DATA_DIR, exist_ok=True)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    print("Starting server on http://localhost:8000")
+    print("API documentation available at http://localhost:8000/docs")
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 
