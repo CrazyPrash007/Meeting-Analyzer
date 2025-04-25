@@ -30,6 +30,13 @@ frontend/node_modules/
 frontend/build/
 frontend/.env
 
+# Project specific
+backend/uploads/
+backend/data/
+backend/pdfs/
+.vscode/
+.idea/
+
 # System Files
 .DS_Store
 Thumbs.db
