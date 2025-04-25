@@ -15,7 +15,7 @@ A web application that analyzes meeting audio by transcribing, translating, summ
 - **Frontend**: React, Material-UI
 - **Backend**: FastAPI, SQLite
 - **AI Services**: 
-  - Alibaba Cloud ASR for transcription and translation
+  - AssemblyAI for transcription 
   - Cohere AI for summarization and action item extraction
 - **PDF Generation**: ReportLab
 
@@ -49,54 +49,54 @@ meeting-analyzer/
 - Alibaba Cloud account with ASR service activated (for production)
 - Cohere AI API key (for production)
 
-## Setup and Installation
+## Setup Instructions
 
-### 1. Clone the repository
+### API Keys
 
-```bash
-git clone https://github.com/CrazyPrash007/Meeting-Analyzer.git
-cd Meeting-Analyzer
+The application requires the following API keys to function properly:
+
+1. **AssemblyAI** for speech-to-text transcription
+   - Create an account at [AssemblyAI](https://www.assemblyai.com/)
+   - Get your API key from the AssemblyAI dashboard
+
+2. **Cohere AI** for text analysis, summarization, and action item extraction
+   - Create an account at [Cohere](https://cohere.ai/)
+   - Get your API key from the Cohere dashboard
+
+Create a `.env` file in the `backend` directory with the following content:
+
+```
+# AssemblyAI API Key
+ASSEMBLY_AI_API_KEY=your_assembly_ai_api_key_here
+
+# Cohere API Key
+COHERE_API_KEY=your_cohere_api_key_here
 ```
 
-### 2. Backend Setup
+### Running the Application
 
-```bash
-# Navigate to backend directory
-cd backend
+1. Start the backend server:
+   ```
+   cd backend
+   python -m uvicorn main:app --reload
+   ```
 
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+2. Start the frontend development server:
+   ```
+   cd frontend
+   npm start
+   ```
 
-# Install dependencies
-pip install -r requirements.txt
+3. Open your browser and navigate to `http://localhost:3000`
 
-# Configure environment variables
-# Create a .env file in the backend directory with the following:
-# ALIBABA_CLOUD_APP_KEY=your_app_key_here
-# ALIBABA_CLOUD_ACCESS_TOKEN=your_access_token_here
-# COHERE_API_KEY=your_cohere_api_key_here
+### Troubleshooting
 
-# Run the backend server
-python main.py
-```
+If you encounter any issues:
 
-The backend server will start at http://localhost:8000
-
-### 3. Frontend Setup
-
-```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install dependencies
-npm install
-
-# Run the frontend development server
-npm start
-```
-
-The frontend development server will start at http://localhost:3000
+1. Check the backend console for error messages
+2. Verify that your API keys are correctly set in the `.env` file
+3. Make sure all dependencies are installed
+4. If meetings data isn't showing, check that the backend server is running properly
 
 ## Demo Mode
 
@@ -109,8 +109,7 @@ The application can run in "demo mode" without requiring actual API keys. In thi
 To run in demo mode, make sure you have the .env file with placeholder values:
 
 ```
-ALIBABA_CLOUD_APP_KEY=demo_app_key
-ALIBABA_CLOUD_ACCESS_TOKEN=demo_access_token
+ASSEMBLY_AI_API_KEY=demo_assembly_ai_api_key
 COHERE_API_KEY=demo_cohere_api_key
 ```
 
