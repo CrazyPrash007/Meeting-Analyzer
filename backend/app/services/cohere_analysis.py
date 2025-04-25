@@ -1,13 +1,8 @@
 import json
-try:
-    import cohere
-    from langchain_core.prompts import PromptTemplate
-    from langchain_core.output_parsers import StrOutputParser
-    from langchain_cohere import ChatCohere
-    DEMO_MODE = False
-except ImportError:
-    DEMO_MODE = True
-    print("Running in DEMO MODE - Cohere AI analysis will return mock data")
+import cohere
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_cohere import ChatCohere
 
 from ..core.config import settings
 
@@ -17,7 +12,7 @@ class CohereAnalysisService:
     def __init__(self):
         self.api_key = settings.COHERE_API_KEY
         
-        if not DEMO_MODE:
+        try:
             # Initialize direct Cohere client
             self.client = cohere.Client(api_key=self.api_key)
             
@@ -40,12 +35,19 @@ class CohereAnalysisService:
                 {transcript}
                 
                 Format your response as JSON with two keys: 'summary' and 'action_items'.
+                For action_items, make sure to provide a STRING of bullet points, NOT a list/array.
+                
+                Each action item should start with the person's name followed by a colon.
+                For example:
+                "action_items": "• John: Submit the report by Friday\n• Sarah: Schedule follow-up meeting\n• Team: Review documentation"
                 """
             )
             
             # Create the LangChain processing chain
             self.chain = self.summary_prompt | self.model | StrOutputParser()
-        else:
+            print("Cohere AI client initialized successfully")
+        except Exception as e:
+            print(f"Error initializing Cohere AI client: {e}")
             self.client = None
             self.model = None
             self.chain = None
@@ -59,14 +61,10 @@ class CohereAnalysisService:
             transcript: The meeting transcript text
             
         Returns:
-            Dictionary with summary and action_items
+            Dictionary with summary and action_items as strings
         """
-        if DEMO_MODE:
-            # Return demo data in demo mode
-            return {
-                "summary": "This is a demo summary. In production mode, this would be generated using Cohere AI analysis of the transcript.",
-                "action_items": "- John: Create project timeline by next Friday\n- Sarah: Review the proposal by EOD\n- Team: Submit feedback on the new features by next week"
-            }
+        if not self.client:
+            raise Exception("Cohere AI client not initialized")
             
         try:
             # Try using LangChain with Cohere first
@@ -82,11 +80,21 @@ class CohereAnalysisService:
                     json_content = ai_response.split("```")[1].strip()
                 
                 result = json.loads(json_content)
+                
+                # Convert action_items to string if it's a list
+                action_items = result.get("action_items", "No action items found")
+                if isinstance(action_items, list):
+                    action_items = "\n".join([f"• {item}" for item in action_items])
+                
+                # Ensure action items have proper bullet points
+                action_items = self._format_action_items(action_items)
+                
                 return {
-                    "summary": result.get("summary", "Failed to generate summary"),
-                    "action_items": result.get("action_items", "No action items found")
+                    "summary": str(result.get("summary", "Failed to generate summary")),
+                    "action_items": action_items
                 }
-            except (json.JSONDecodeError, IndexError):
+            except (json.JSONDecodeError, IndexError) as e:
+                print(f"Error parsing JSON from LangChain response: {e}. Falling back to direct API.")
                 # Fallback: Use direct Cohere API
                 response = self.client.summarize(
                     text=transcript,
@@ -95,23 +103,87 @@ class CohereAnalysisService:
                     extractiveness="medium"
                 )
                 
-                # Get action items
+                # Get action items with improved prompt
                 action_items_response = self.client.chat(
-                    message=f"Extract all action items from this meeting transcript as a bulleted list. Only include clear action items with assigned people if possible: {transcript}",
+                    message=f"""Extract all action items from this meeting transcript as a bulleted list. 
+                    Format each action item starting with the person responsible, followed by a colon, then the action.
+                    If deadline is mentioned, include it.
+                    Example format:
+                    • John: Submit the report by Friday
+                    • Sarah: Schedule follow-up meeting
+                    • Team: Review documentation
+                    
+                    Meeting transcript: {transcript}""",
                     model="command"
                 )
                 
+                # Ensure action items have proper bullet points
+                action_items = self._format_action_items(action_items_response.text)
+                
                 return {
-                    "summary": response.summary,
-                    "action_items": action_items_response.text
+                    "summary": str(response.summary),
+                    "action_items": action_items
                 }
                 
         except Exception as e:
             print(f"Error calling Cohere API: {e}")
-            return {
-                "summary": "Failed to generate summary due to API error",
-                "action_items": "Failed to extract action items due to API error"
-            }
+            # Try alternative approach with simpler API calls
+            try:
+                # Directly use chat API for both summary and action items
+                summary_response = self.client.chat(
+                    message=f"Summarize this meeting transcript in 3-5 bullet points: {transcript}",
+                    model="command"
+                )
+                
+                action_items_response = self.client.chat(
+                    message=f"""Extract all action items from this meeting transcript as a bulleted list.
+                    Format each action item starting with the person responsible, followed by a colon, then the action.
+                    If deadline is mentioned, include it.
+                    
+                    Meeting transcript: {transcript}""",
+                    model="command"
+                )
+                
+                # Ensure action items have proper bullet points
+                action_items = self._format_action_items(action_items_response.text)
+                
+                return {
+                    "summary": str(summary_response.text),
+                    "action_items": action_items
+                }
+            except Exception as e2:
+                print(f"Final error calling Cohere API: {e2}")
+                return {
+                    "summary": "Failed to generate summary due to API error",
+                    "action_items": "No action items found"
+                }
+    
+    def _format_action_items(self, action_items_text):
+        """Format action items with consistent bullet points"""
+        if not action_items_text or action_items_text.strip() == "":
+            return "No action items found"
+            
+        # Split by lines and clean up
+        lines = [line.strip() for line in action_items_text.split('\n') if line.strip()]
+        formatted_lines = []
+        
+        for line in lines:
+            # Skip headers or non-action lines
+            if "action item" in line.lower() and len(line) < 30:
+                continue
+                
+            # Remove existing bullet points of various types
+            if line.startswith(('•', '-', '*', '>', '1.', '2.', '3.')):
+                line = line[line.find(' ')+1:].strip()
+                
+            # Add consistent bullet point format
+            formatted_lines.append(f"• {line}")
+        
+        # If no valid lines were found, return default message
+        if not formatted_lines:
+            return "No action items found"
+            
+        return "\n".join(formatted_lines)
     
     def _extract_summary(self, text):
         """Extract summary from text if JSON parsing fails"""

@@ -56,11 +56,14 @@ class Meeting(Base):
     title = Column(String, index=True)
     date = Column(DateTime, default=datetime.datetime.utcnow)
     audio_path = Column(String)
-    transcription = Column(Text)
+    audio_info = Column(Text, nullable=True)  # JSON string with audio file information
+    transcription = Column(Text, nullable=True)
     translation = Column(Text, nullable=True)
     summary = Column(Text, nullable=True)
     action_items = Column(Text, nullable=True)
     language = Column(String, default="en")
+    detected_language = Column(String, nullable=True)  # Human-readable detected language
+    audio_duration = Column(String, nullable=True)  # Duration of the audio file
     
     # Define relationship with PDFs
     pdfs = relationship("PDF", back_populates="meeting", cascade="all, delete-orphan")
@@ -78,8 +81,50 @@ class PDF(Base):
     # Define relationship with Meeting
     meeting = relationship("Meeting", back_populates="pdfs")
 
+# Function to check and add missing columns to the database
+def update_database_schema():
+    import sqlite3
+    
+    try:
+        print("Checking database schema for updates...")
+        
+        # Connect to SQLite database
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        
+        # Get current columns in the meetings table
+        cursor.execute("PRAGMA table_info(meetings)")
+        columns = [column[1] for column in cursor.fetchall()]
+        
+        # Check if required columns exist and add them if they don't
+        if "audio_info" not in columns:
+            print("Adding missing 'audio_info' column to meetings table...")
+            cursor.execute("ALTER TABLE meetings ADD COLUMN audio_info TEXT")
+            conn.commit()
+        
+        if "detected_language" not in columns:
+            print("Adding missing 'detected_language' column to meetings table...")
+            cursor.execute("ALTER TABLE meetings ADD COLUMN detected_language TEXT")
+            conn.commit()
+        
+        if "audio_duration" not in columns:
+            print("Adding missing 'audio_duration' column to meetings table...")
+            cursor.execute("ALTER TABLE meetings ADD COLUMN audio_duration TEXT")
+            conn.commit()
+            
+        print("Database schema updates completed.")
+        
+        # Close connection
+        conn.close()
+        
+    except Exception as e:
+        print(f"Error updating database schema: {e}")
+
 # Create all tables
 Base.metadata.create_all(bind=engine)
+
+# Update database schema if needed
+update_database_schema()
 
 # Database dependency
 def get_db():
