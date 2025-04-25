@@ -222,7 +222,6 @@ const UploadPage = () => {
                 borderColor: !loading && !success ? 'primary.main' : 'grey.300',
                 backgroundColor: !loading && !success ? `${theme.palette.primary.light}15` : 'background.paper',
                 boxShadow: !loading && !success ? '0px 4px 12px rgba(0, 0, 0, 0.08)' : 'none',
-                opacity: 1
               }
             }}
           >

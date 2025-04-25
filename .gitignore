@@ -9,7 +9,8 @@ __pycache__/
 *.tmp
 *.old
 *.orig
-*.env
+*.so
+.env
 .pytest_cache/
 htmlcov/
 coverage.xml
@@ -18,17 +19,24 @@ __pypackages__/
 # Virtual Environment
 venv/
 env/
+ENV/
+.venv/
 
 # Node.js
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
 
 # React (frontend)
 frontend/node_modules/
 frontend/build/
 frontend/.env
+frontend/.env.local
+frontend/.env.development
+frontend/.env.test
+frontend/.env.production
 
 # Project specific
 backend/uploads/
@@ -40,3 +48,7 @@ backend/pdfs/
 # System Files
 .DS_Store
 Thumbs.db
+
+# Environment variables
+.env*
+!.env.example
