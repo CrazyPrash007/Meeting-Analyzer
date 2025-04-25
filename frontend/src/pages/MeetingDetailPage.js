@@ -47,6 +47,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { toast } from 'react-hot-toast';
+import { formatDateWithTimezone, getTimeAgo } from '../utils/dateUtils';
+import TimezoneSelector from '../components/TimezoneSelector';
 
 // Tab panel component
 function TabPanel(props) {
@@ -69,37 +71,6 @@ function TabPanel(props) {
   );
 }
 
-// Format date utility function
-const formatDate = (dateString) => {
-  if (!dateString) return 'Not available';
-  
-  try {
-    // Try to create a valid date object
-    const date = new Date(dateString);
-    
-    // Check if the date is valid
-    if (isNaN(date.getTime())) {
-      console.warn('Invalid date format:', dateString);
-      return 'Invalid date format';
-    }
-    
-    // Format the date with a more reliable approach
-    const options = { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    };
-    
-    return date.toLocaleString(undefined, options);
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'Date format error';
-  }
-};
-
 // Add this function to parse JSON data
 const parseAudioInfo = (audioInfoStr) => {
   if (!audioInfoStr) return null;
@@ -112,7 +83,7 @@ const parseAudioInfo = (audioInfoStr) => {
   }
 };
 
-// Add this component to display audio information
+// Update the AudioInfoCard component to use the new timezone selector
 const AudioInfoCard = ({ audioInfoStr, meeting }) => {
   const audioInfo = parseAudioInfo(audioInfoStr);
   
@@ -121,9 +92,12 @@ const AudioInfoCard = ({ audioInfoStr, meeting }) => {
   return (
     <Card variant="outlined" sx={{ mb: 3 }}>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
-          Meeting Information
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+          <Typography variant="h6" gutterBottom>
+            Meeting Information
+          </Typography>
+          <TimezoneSelector compact />
+        </Box>
         <Grid container spacing={2}>
           {/* Recording Date */}
           <Grid item xs={12} sm={6}>
@@ -134,8 +108,13 @@ const AudioInfoCard = ({ audioInfoStr, meeting }) => {
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
-              {formatDate(meeting?.date)}
+              {formatDateWithTimezone(meeting?.date)}
             </Typography>
+            {meeting?.date && (
+              <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
+                {getTimeAgo(meeting.date)}
+              </Typography>
+            )}
           </Grid>
 
           {/* Language Information */}
