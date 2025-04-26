@@ -41,6 +41,7 @@ frontend/.env.production
 # Project specific
 backend/uploads/
 backend/data/
+!backend/data/meetings.db  # Exception: Keep the database file in version control
 backend/pdfs/
 .vscode/
 .idea/
