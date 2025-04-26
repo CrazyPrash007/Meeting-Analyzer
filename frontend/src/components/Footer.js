@@ -43,6 +43,15 @@ const Footer = () => {
               <Link href="/meetings" color="text.secondary" sx={{ textDecoration: 'none' }}>
                 My Meetings
               </Link>
+              <Link 
+                href="https://github.com/CrazyPrash007/Meeting-Analyzer" 
+                color="text.secondary" 
+                sx={{ textDecoration: 'none' }}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GitHub Repository
+              </Link>
             </Box>
           </Grid>
           
@@ -72,13 +81,34 @@ const Footer = () => {
           </Typography>
           
           <Box>
-            <IconButton color="primary" aria-label="GitHub" component="a" href="#" target="_blank">
+            <IconButton 
+              color="primary" 
+              aria-label="GitHub" 
+              component="a" 
+              href="https://github.com/CrazyPrash007/Meeting-Analyzer" 
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <GitHubIcon />
             </IconButton>
-            <IconButton color="primary" aria-label="LinkedIn" component="a" href="#" target="_blank">
+            <IconButton 
+              color="primary" 
+              aria-label="LinkedIn" 
+              component="a" 
+              href="https://www.linkedin.com/in/prashantkr-sharma/" 
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <LinkedInIcon />
             </IconButton>
-            <IconButton color="primary" aria-label="Twitter" component="a" href="#" target="_blank">
+            <IconButton 
+              color="primary" 
+              aria-label="Twitter" 
+              component="a" 
+              href="https://x.com/crazyprash_" 
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <TwitterIcon />
             </IconButton>
           </Box>

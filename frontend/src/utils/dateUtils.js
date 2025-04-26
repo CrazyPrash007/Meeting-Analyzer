@@ -19,11 +19,37 @@ export const AVAILABLE_TIMEZONES = [
 const DEFAULT_TIMEZONE = 'Asia/Kolkata';
 
 /**
+ * Get the abbreviation for a timezone
+ * @param {string} timezone - The timezone
+ * @returns {string} The abbreviation for the timezone
+ */
+export const getTimezoneAbbreviation = (timezone) => {
+  const abbreviations = {
+    'Asia/Kolkata': 'IST',
+    'UTC': 'UTC',
+    'America/New_York': 'ET',
+    'America/Los_Angeles': 'PT',
+    'Europe/London': 'GMT',
+    'Europe/Paris': 'CET',
+    'Asia/Tokyo': 'JST',
+    'Asia/Shanghai': 'CST',
+    'Australia/Sydney': 'AEST'
+  };
+  
+  return abbreviations[timezone] || timezone.split('/').pop();
+};
+
+/**
  * Get the user's preferred timezone
  * @returns {string} The timezone from localStorage or the default
  */
 export const getUserTimezone = () => {
   try {
+    // Initialize localStorage with default timezone if not set
+    if (!localStorage.getItem('userTimezone')) {
+      localStorage.setItem('userTimezone', DEFAULT_TIMEZONE);
+    }
+    
     const savedTimezone = localStorage.getItem('userTimezone');
     return savedTimezone || DEFAULT_TIMEZONE;
   } catch (error) {
@@ -39,23 +65,28 @@ export const getUserTimezone = () => {
 export const setUserTimezone = (timezone) => {
   try {
     localStorage.setItem('userTimezone', timezone);
+    console.log(`Timezone set to: ${timezone}`);
   } catch (error) {
     console.error('Error saving to localStorage:', error);
   }
 };
 
 /**
- * Get the display name for a timezone
+ * Get the display name/label for a timezone
  * @param {string} timezone - The timezone value
- * @returns {string} The display name or the timezone value if not found
+ * @returns {string} The display name or abbreviation for the timezone
  */
 export const getTimezoneLabel = (timezone) => {
+  // First try to find the timezone in our predefined list
   const found = AVAILABLE_TIMEZONES.find(tz => tz.value === timezone);
-  return found ? found.label : timezone;
+  if (found) return found.label;
+  
+  // If not found, get the abbreviation
+  return getTimezoneAbbreviation(timezone);
 };
 
 /**
- * Formats a date string to the user's preferred timezone
+ * Formats a date string to the user's preferred timezone or a specific timezone
  * @param {string} dateString - The date string to format
  * @param {string} timezone - Optional timezone override (defaults to user preference)
  * @returns {string} Formatted date string in the specified timezone
@@ -73,8 +104,12 @@ export const formatDateWithTimezone = (dateString, timezone = null) => {
       return 'Invalid date format';
     }
     
-    // Use provided timezone or get user preference
-    const userTimezone = timezone || getUserTimezone();
+    // If the date is in the future, use UTC for display
+    const now = new Date();
+    const isFutureDate = date > now;
+    
+    // Use UTC for future dates, otherwise use provided timezone or user preference
+    const userTimezone = isFutureDate ? "UTC" : (timezone || getUserTimezone());
     
     // Format options
     const options = { 
@@ -117,10 +152,8 @@ export const getCurrentTimeWithTimezone = (timezone = null) => {
   const now = new Date();
   const userTimezone = timezone || getUserTimezone();
   
+  // Format options - just time without the date
   const options = { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
@@ -128,10 +161,7 @@ export const getCurrentTimeWithTimezone = (timezone = null) => {
     timeZone: userTimezone
   };
   
-  // Get the abbreviation based on timezone
-  const timezoneAbbr = getTimezoneAbbreviation(userTimezone);
-  
-  return now.toLocaleString('en-US', options) + ` (${timezoneAbbr})`;
+  return now.toLocaleString('en-US', options);
 };
 
 /**
@@ -141,27 +171,6 @@ export const getCurrentTimeWithTimezone = (timezone = null) => {
  */
 export const getCurrentTimeIST = () => {
   return getCurrentTimeWithTimezone('Asia/Kolkata');
-};
-
-/**
- * Get the abbreviation for a timezone
- * @param {string} timezone - The timezone
- * @returns {string} The abbreviation for the timezone
- */
-const getTimezoneAbbreviation = (timezone) => {
-  const abbreviations = {
-    'Asia/Kolkata': 'IST',
-    'UTC': 'UTC',
-    'America/New_York': 'ET',
-    'America/Los_Angeles': 'PT',
-    'Europe/London': 'GMT',
-    'Europe/Paris': 'CET',
-    'Asia/Tokyo': 'JST',
-    'Asia/Shanghai': 'CST',
-    'Australia/Sydney': 'AEST'
-  };
-  
-  return abbreviations[timezone] || timezone.split('/').pop();
 };
 
 /**
@@ -183,6 +192,36 @@ export const getTimeAgo = (dateString) => {
     const now = new Date();
     const diffInSeconds = Math.floor((now - date) / 1000);
     
+    // Handle future dates
+    if (diffInSeconds < 0) {
+      // For future dates, return "in the future" instead of negative time
+      const positiveSeconds = Math.abs(diffInSeconds);
+      
+      const positiveMinutes = Math.floor(positiveSeconds / 60);
+      if (positiveMinutes < 60) {
+        return `in ${positiveMinutes} ${positiveMinutes === 1 ? 'minute' : 'minutes'}`;
+      }
+      
+      const positiveHours = Math.floor(positiveMinutes / 60);
+      if (positiveHours < 24) {
+        return `in ${positiveHours} ${positiveHours === 1 ? 'hour' : 'hours'}`;
+      }
+      
+      const positiveDays = Math.floor(positiveHours / 24);
+      if (positiveDays < 30) {
+        return `in ${positiveDays} ${positiveDays === 1 ? 'day' : 'days'}`;
+      }
+      
+      const positiveMonths = Math.floor(positiveDays / 30);
+      if (positiveMonths < 12) {
+        return `in ${positiveMonths} ${positiveMonths === 1 ? 'month' : 'months'}`;
+      }
+      
+      const positiveYears = Math.floor(positiveMonths / 12);
+      return `in ${positiveYears} ${positiveYears === 1 ? 'year' : 'years'}`;
+    }
+    
+    // Handle recent past dates
     if (diffInSeconds < 60) {
       return 'Just now';
     }

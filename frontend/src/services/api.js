@@ -1,5 +1,6 @@
 import axios from 'axios';
 import saveAs from 'file-saver';
+import { getUserTimezone } from '../utils/dateUtils';
 
 const API_URL = '/api';
 
@@ -15,6 +16,9 @@ const api = axios.create({
 const apiService = {
   // Upload meeting audio
   uploadMeetingAudio: async (formData) => {
+    // Add user's timezone to the form data
+    formData.append('timezone', getUserTimezone());
+    
     const response = await api.post('/meetings/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

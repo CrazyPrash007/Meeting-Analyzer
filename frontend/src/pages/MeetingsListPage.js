@@ -149,7 +149,7 @@ const MeetingsListPage = () => {
           >
             My Meetings
           </Typography>
-          <TimezoneSelector compact showIcon={false} />
+          <TimezoneSelector compact showIcon={true} />
         </Box>
         
         <Paper 
@@ -322,9 +322,17 @@ const MeetingsListPage = () => {
                       </Box>
                       
                       {meeting.date && (
-                        <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
-                          {getTimeAgo(meeting.date)}
-                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                          {new Date(meeting.date) > new Date() ? (
+                            <Typography variant="caption" color="primary.main" sx={{ ml: 4, fontStyle: 'italic' }}>
+                              Future date (UTC)
+                            </Typography>
+                          ) : (
+                            <Typography variant="caption" color="text.secondary" sx={{ ml: 4 }}>
+                              {getTimeAgo(meeting.date)}
+                            </Typography>
+                          )}
+                        </Box>
                       )}
                       
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>

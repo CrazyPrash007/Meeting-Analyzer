@@ -86,6 +86,7 @@ const parseAudioInfo = (audioInfoStr) => {
 // Update the AudioInfoCard component to use the new timezone selector
 const AudioInfoCard = ({ audioInfoStr, meeting }) => {
   const audioInfo = parseAudioInfo(audioInfoStr);
+  const isFutureDate = meeting?.date ? new Date(meeting.date) > new Date() : false;
   
   if (!audioInfo && !meeting) return null;
   
@@ -96,7 +97,7 @@ const AudioInfoCard = ({ audioInfoStr, meeting }) => {
           <Typography variant="h6" gutterBottom>
             Meeting Information
           </Typography>
-          <TimezoneSelector compact />
+          <TimezoneSelector compact showIcon={true} />
         </Box>
         <Grid container spacing={2}>
           {/* Recording Date */}
@@ -108,14 +109,34 @@ const AudioInfoCard = ({ audioInfoStr, meeting }) => {
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
-              {formatDateWithTimezone(meeting?.date)}
+              {formatDateWithTimezone(meeting?.date, meeting?.timezone)}
             </Typography>
-            {meeting?.date && (
+            {isFutureDate && (
+              <Typography variant="caption" color="primary" sx={{ ml: 4, display: 'block', fontStyle: 'italic' }}>
+                Future date displayed in UTC for consistency
+              </Typography>
+            )}
+            {meeting?.date && !isFutureDate && (
               <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
                 {getTimeAgo(meeting.date)}
               </Typography>
             )}
           </Grid>
+
+          {/* Original Timezone (if available) */}
+          {meeting?.timezone && (
+            <Grid item xs={12} sm={6}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <EventIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                <Typography variant="body2" color="text.primary" fontWeight={500}>
+                  Original Timezone:
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
+                {meeting.timezone}
+              </Typography>
+            </Grid>
+          )}
 
           {/* Language Information */}
           {(meeting?.detected_language || audioInfo?.detected_language) && (
@@ -408,7 +429,12 @@ const MeetingDetailPage = () => {
       .map((item, index) => item.trim());
   };
 
-  // Function to handle search
+  // Helper function to escape regular expression special characters
+  const escapeRegExp = (string) => {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  };
+
+  // Function to handle search with improved word boundary detection
   const handleSearch = () => {
     if (!searchTerm.trim() || !meeting?.transcription) {
       setSearchResults([]);
@@ -417,13 +443,15 @@ const MeetingDetailPage = () => {
     }
 
     const term = searchTerm.toLowerCase();
-    const text = meeting.transcription.toLowerCase();
+    const text = meeting.transcription;
     const results = [];
+    const escapedTerm = escapeRegExp(term);
     
-    let position = text.indexOf(term);
-    while (position !== -1) {
-      results.push(position);
-      position = text.indexOf(term, position + 1);
+    // Find all occurrences with word boundaries when appropriate
+    const regex = new RegExp(escapedTerm, 'gi');
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      results.push(match.index);
     }
     
     setSearchResults(results);
@@ -440,67 +468,118 @@ const MeetingDetailPage = () => {
     }
   };
 
-  // Define scroll functions first with useRef dependencies
+  // Function to scroll to a specific search result with improved positioning
   const scrollToResult = useCallback((index) => {
     if (!transcriptionRef.current || searchResults.length === 0) return;
     
     const transcriptionElement = transcriptionRef.current;
     const result = searchResults[index];
+    const text = meeting?.transcription || '';
     
-    // Create a temporary element to calculate correct position
-    const tempElement = document.createElement('div');
-    tempElement.style.visibility = 'hidden';
-    tempElement.style.position = 'absolute';
-    tempElement.innerHTML = meeting?.transcription?.substring(0, result) || '';
-    document.body.appendChild(tempElement);
+    // Highlight the currently focused search result differently
+    const highlightedSearchTerm = document.querySelectorAll('.search-highlight');
+    highlightedSearchTerm.forEach(el => {
+      el.classList.remove('search-highlight');
+    });
     
-    const height = tempElement.offsetHeight;
-    document.body.removeChild(tempElement);
+    // Calculate position more accurately
+    const textBefore = text.substring(0, result);
+    const lines = textBefore.split('\n').length;
+    const approximateLineHeight = 24; // Typical line height in pixels
+    
+    // Calculate position based on line count and approximate line height
+    const scrollPosition = lines * approximateLineHeight - 100;
     
     // Scroll to the position
-    transcriptionElement.scrollTop = height - 100; // Offset to center the result
+    transcriptionElement.scrollTop = scrollPosition;
+    
+    // Add a slight delay before highlighting the current result
+    setTimeout(() => {
+      // Find all highlighted marks and add an active class to the current one
+      const allHighlights = transcriptionElement.querySelectorAll('mark');
+      if (allHighlights.length > index) {
+        allHighlights[index].classList.add('search-highlight');
+        
+        // Ensure it's fully visible
+        allHighlights[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50);
   }, [transcriptionRef, searchResults, meeting]);
 
-  // Function to scroll to a specific translation search result
+  // Function to scroll to a specific translation search result with improved positioning
   const scrollToTranslationResult = useCallback((index) => {
     if (!translationRef.current || translationSearchResults.length === 0) return;
     
     const translationElement = translationRef.current;
     const result = translationSearchResults[index];
+    const text = meeting?.translation || '';
     
-    // Create a temporary element to calculate correct position
-    const tempElement = document.createElement('div');
-    tempElement.style.visibility = 'hidden';
-    tempElement.style.position = 'absolute';
-    tempElement.innerHTML = meeting?.translation?.substring(0, result) || '';
-    document.body.appendChild(tempElement);
+    // Highlight the currently focused search result differently
+    const highlightedSearchTerm = document.querySelectorAll('.search-highlight');
+    highlightedSearchTerm.forEach(el => {
+      el.classList.remove('search-highlight');
+    });
     
-    const height = tempElement.offsetHeight;
-    document.body.removeChild(tempElement);
+    // Calculate position more accurately
+    const textBefore = text.substring(0, result);
+    const lines = textBefore.split('\n').length;
+    const approximateLineHeight = 24; // Typical line height in pixels
+    
+    // Calculate position based on line count and approximate line height
+    const scrollPosition = lines * approximateLineHeight - 100;
     
     // Scroll to the position
-    translationElement.scrollTop = height - 100; // Offset to center the result
+    translationElement.scrollTop = scrollPosition;
+    
+    // Add a slight delay before highlighting the current result
+    setTimeout(() => {
+      // Find all highlighted marks and add an active class to the current one
+      const allHighlights = translationElement.querySelectorAll('mark');
+      if (allHighlights.length > index) {
+        allHighlights[index].classList.add('search-highlight');
+        
+        // Ensure it's fully visible
+        allHighlights[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50);
   }, [translationRef, translationSearchResults, meeting]);
 
-  // Function to scroll to a specific summary search result
+  // Function to scroll to a specific summary search result with improved positioning
   const scrollToSummaryResult = useCallback((index) => {
     if (!summaryRef.current || summarySearchResults.length === 0) return;
     
     const summaryElement = summaryRef.current;
     const result = summarySearchResults[index];
+    const text = meeting?.summary || '';
     
-    // Create a temporary element to calculate correct position
-    const tempElement = document.createElement('div');
-    tempElement.style.visibility = 'hidden';
-    tempElement.style.position = 'absolute';
-    tempElement.innerHTML = meeting?.summary?.substring(0, result) || '';
-    document.body.appendChild(tempElement);
+    // Highlight the currently focused search result differently
+    const highlightedSearchTerm = document.querySelectorAll('.search-highlight');
+    highlightedSearchTerm.forEach(el => {
+      el.classList.remove('search-highlight');
+    });
     
-    const height = tempElement.offsetHeight;
-    document.body.removeChild(tempElement);
+    // Calculate position more accurately
+    const textBefore = text.substring(0, result);
+    const lines = textBefore.split('\n').length;
+    const approximateLineHeight = 24; // Typical line height in pixels
+    
+    // Calculate position based on line count and approximate line height
+    const scrollPosition = lines * approximateLineHeight - 100;
     
     // Scroll to the position
-    summaryElement.scrollTop = height - 100; // Offset to center the result
+    summaryElement.scrollTop = scrollPosition;
+    
+    // Add a slight delay before highlighting the current result
+    setTimeout(() => {
+      // Find all highlighted marks and add an active class to the current one
+      const allHighlights = summaryElement.querySelectorAll('mark');
+      if (allHighlights.length > index) {
+        allHighlights[index].classList.add('search-highlight');
+        
+        // Ensure it's fully visible
+        allHighlights[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50);
   }, [summaryRef, summarySearchResults, meeting]);
 
   // Function to navigate between search results
@@ -548,7 +627,7 @@ const MeetingDetailPage = () => {
     scrollToSummaryResult(newIndex);
   }, [summarySearchResults, currentSummaryResultIndex, scrollToSummaryResult]);
 
-  // Function to highlight search results in text
+  // Function to highlight search results in text with improved highlighting for current result
   const highlightSearchResults = (text) => {
     if (!searchTerm.trim() || !text) return text;
     
@@ -566,6 +645,7 @@ const MeetingDetailPage = () => {
               borderRadius: '2px',
               fontWeight: 'bold'
             }}
+            className={`search-result-highlight`}
           >
             {part}
           </mark>
@@ -575,7 +655,7 @@ const MeetingDetailPage = () => {
     });
   };
 
-  // Function to handle translation search
+  // Function to handle translation search with improved word boundary detection
   const handleTranslationSearch = () => {
     if (!translationSearchTerm.trim() || !meeting?.translation) {
       setTranslationSearchResults([]);
@@ -584,13 +664,15 @@ const MeetingDetailPage = () => {
     }
 
     const term = translationSearchTerm.toLowerCase();
-    const text = meeting.translation.toLowerCase();
+    const text = meeting.translation;
     const results = [];
+    const escapedTerm = escapeRegExp(term);
     
-    let position = text.indexOf(term);
-    while (position !== -1) {
-      results.push(position);
-      position = text.indexOf(term, position + 1);
+    // Find all occurrences with word boundaries when appropriate
+    const regex = new RegExp(escapedTerm, 'gi');
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      results.push(match.index);
     }
     
     setTranslationSearchResults(results);
@@ -607,7 +689,7 @@ const MeetingDetailPage = () => {
     }
   };
 
-  // Function to highlight translation search results in text
+  // Function to highlight translation search results in text with improved highlighting
   const highlightTranslationSearchResults = (text) => {
     if (!translationSearchTerm.trim() || !text) return text;
     
@@ -625,6 +707,7 @@ const MeetingDetailPage = () => {
               borderRadius: '2px',
               fontWeight: 'bold'
             }}
+            className={`search-result-highlight`}
           >
             {part}
           </mark>
@@ -634,7 +717,7 @@ const MeetingDetailPage = () => {
     });
   };
 
-  // Function to handle summary search
+  // Function to handle summary search with improved word boundary detection
   const handleSummarySearch = () => {
     if (!summarySearchTerm.trim() || !meeting?.summary) {
       setSummarySearchResults([]);
@@ -643,13 +726,15 @@ const MeetingDetailPage = () => {
     }
 
     const term = summarySearchTerm.toLowerCase();
-    const text = meeting.summary.toLowerCase();
+    const text = meeting.summary;
     const results = [];
+    const escapedTerm = escapeRegExp(term);
     
-    let position = text.indexOf(term);
-    while (position !== -1) {
-      results.push(position);
-      position = text.indexOf(term, position + 1);
+    // Find all occurrences with word boundaries when appropriate
+    const regex = new RegExp(escapedTerm, 'gi');
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      results.push(match.index);
     }
     
     setSummarySearchResults(results);
@@ -666,7 +751,7 @@ const MeetingDetailPage = () => {
     }
   };
 
-  // Function to highlight summary search results in text
+  // Function to highlight summary search results in text with improved highlighting
   const highlightSummarySearchResults = (text) => {
     if (!summarySearchTerm.trim() || !text) return text;
     
@@ -684,6 +769,7 @@ const MeetingDetailPage = () => {
               borderRadius: '2px',
               fontWeight: 'bold'
             }}
+            className={`search-result-highlight`}
           >
             {part}
           </mark>

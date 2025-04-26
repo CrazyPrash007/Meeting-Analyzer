@@ -8,6 +8,15 @@ from ..core.config import settings
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# Try to import pydub for audio duration calculation
+try:
+    from pydub import AudioSegment
+    PYDUB_AVAILABLE = True
+    logger.info("Pydub is available for audio duration calculation")
+except ImportError:
+    PYDUB_AVAILABLE = False
+    logger.warning("Pydub not available - will use file size estimation for audio duration")
+
 class AssemblyAIService:
     """Service for AssemblyAI for transcription and language processing"""
     
@@ -125,9 +134,6 @@ class AssemblyAIService:
             raise FileNotFoundError(f"Audio file not found: {audio_file_path}")
 
         try:
-            # In a real implementation, we would use AssemblyAI's API to get audio info
-            # For now, we'll extract basic info from the file and use defaults
-            
             # Get file size and format
             file_size = os.path.getsize(audio_file_path)
             file_ext = os.path.splitext(audio_file_path)[1].upper().replace('.', '')
@@ -139,14 +145,44 @@ class AssemblyAIService:
                 "file_size_mb": round(file_size / (1024 * 1024), 2)
             }
             
+            # Get accurate audio duration using pydub if available
+            duration_str = None
+            try:
+                if PYDUB_AVAILABLE:
+                    logger.info(f"Using pydub to calculate audio duration for {audio_file_path}")
+                    audio = AudioSegment.from_file(audio_file_path)
+                    duration_ms = len(audio)
+                    duration_sec = duration_ms / 1000
+                    
+                    # Format duration as minutes and seconds
+                    minutes = int(duration_sec // 60)
+                    seconds = int(duration_sec % 60)
+                    duration_str = f"{minutes} minutes {seconds} seconds"
+                    
+                    # Add duration to audio info
+                    audio_info["audio_duration"] = duration_str
+                    audio_info["duration_seconds"] = duration_sec
+                    logger.info(f"Audio duration calculated: {duration_str}")
+                else:
+                    # Fallback to estimation based on file size
+                    # This is a very rough estimate and will not be accurate for all formats
+                    estimated_minutes = round(file_size / (16000 * 2 * 60), 2)
+                    duration_str = f"{estimated_minutes} minutes (estimated)"
+                    audio_info["audio_duration"] = duration_str
+                    audio_info["estimated_duration"] = duration_str
+                    logger.info(f"Audio duration estimated: {duration_str}")
+            except Exception as duration_error:
+                logger.error(f"Error calculating audio duration: {duration_error}")
+                # Fallback to very basic estimation
+                estimated_minutes = round(file_size / (16000 * 2 * 60), 2)
+                duration_str = f"{estimated_minutes} minutes (estimated)"
+                audio_info["audio_duration"] = duration_str
+                audio_info["estimated_duration"] = duration_str
+            
             # If we're not in demo mode and have a real API client, try to get more info
-            # This would come from the transcript in a real implementation
             if not self.demo_mode:
-                # In a real implementation, this would come from the transcript object
-                # Example: transcript.audio_duration, transcript.detected_language, etc.
                 audio_info.update({
                     "detected_language": "English (en)",
-                    "estimated_duration": f"{round(file_size / (16000 * 2 * 60), 2)} minutes (estimated)",
                     "speakers_detected": "Unknown (requires transcription)"
                 })
             
@@ -256,7 +292,12 @@ class AssemblyAIService:
                         continue
                     
                     # Parse the response - it's a nested array structure
-                    data = response.json()
+                    try:
+                        data = response.json()
+                    except json.JSONDecodeError as json_err:
+                        logger.error(f"Error parsing translation JSON response: {json_err}")
+                        translated_chunks.append(f"[Translation parsing error for chunk {i+1}]")
+                        continue
                     
                     # Extract the translated text from the response
                     # The response format is different from the other endpoint

@@ -73,7 +73,6 @@ const HomePage = () => {
             fontWeight="bold" 
             gutterBottom
             sx={{ 
-              fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }, 
               backgroundImage: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
               backgroundClip: 'text',
               color: 'transparent',
@@ -90,8 +89,7 @@ const HomePage = () => {
             sx={{ 
               maxWidth: '800px', 
               mx: 'auto', 
-              mb: 4,
-              fontSize: { xs: '1rem', md: '1.25rem' } 
+              mb: 4
             }}
           >
             Upload your meeting audio and get AI-powered transcription, translation, 
@@ -472,7 +470,6 @@ const HomePage = () => {
                   sx={{ 
                     px: 4, 
                     py: 1,
-                    fontSize: '1rem',
                     boxShadow: '0 6px 12px rgba(0, 0, 0, 0.1)'
                   }}
                 >

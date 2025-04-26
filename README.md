@@ -47,6 +47,10 @@ meeting-analyzer/
 - Node.js 14+
 - npm or yarn
 - Git
+- FFmpeg (required for audio duration calculation)
+  - [Windows Installation Guide](https://www.wikihow.com/Install-FFmpeg-on-Windows)
+  - [macOS Installation](https://formulae.brew.sh/formula/ffmpeg): `brew install ffmpeg`
+  - [Ubuntu/Debian Installation](https://linuxize.com/post/how-to-install-ffmpeg-on-ubuntu-20-04/): `sudo apt install ffmpeg`
 
 ## Installation
 

@@ -79,6 +79,9 @@ class CohereAnalysisService:
                 elif "```" in ai_response:
                     json_content = ai_response.split("```")[1].strip()
                 
+                # Clean JSON content by replacing invalid control characters
+                json_content = self._clean_json_string(json_content)
+                
                 result = json.loads(json_content)
                 
                 # Convert action_items to string if it's a list
@@ -228,6 +231,13 @@ class CohereAnalysisService:
         
         # Fallback
         return "No action items found"
+
+    def _clean_json_string(self, json_string):
+        """Clean JSON string by removing invalid control characters"""
+        import re
+        # Remove control characters (except for whitespace)
+        pattern = r'[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]'
+        return re.sub(pattern, '', json_string)
 
 
 # Create instance

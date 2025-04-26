@@ -34,6 +34,7 @@ class MeetingResponse(MeetingBase):
     summary: Optional[str] = None
     action_items: Optional[str] = None
     date: Optional[datetime.datetime] = None
+    timezone: Optional[str] = "UTC"
     detected_language: Optional[str] = None
     audio_duration: Optional[str] = None
     
@@ -56,11 +57,13 @@ async def upload_meeting_audio(
     background_tasks: BackgroundTasks,
     title: str = Form(...),
     audio_file: UploadFile = File(...),
+    timezone: str = Form("UTC"),  # Add timezone parameter with default UTC
     db: Session = Depends(get_db)
 ):
     """
     Upload meeting audio file for processing
     Language will be auto-detected during processing
+    Timezone parameter specifies the client's timezone
     """
     # Generate unique filename
     file_extension = os.path.splitext(audio_file.filename)[1]
@@ -80,10 +83,15 @@ async def upload_meeting_audio(
     # Create meeting record with English as default language
     # Language will be detected during processing if possible
     try:
+        # Create a new meeting with current time and provided timezone
+        current_time = datetime.datetime.utcnow()
+        
         db_meeting = Meeting(
             title=title,
             language="en",  # Default to English, will be updated if detected otherwise
-            audio_path=file_path
+            audio_path=file_path,
+            date=current_time,
+            timezone=timezone  # Store the client's timezone
         )
         db.add(db_meeting)
         db.commit()

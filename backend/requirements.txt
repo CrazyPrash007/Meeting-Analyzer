@@ -17,6 +17,8 @@ langchain-cohere==0.4.4
 langchain-core==0.3.56
 langchain==0.3.24
 langchain-community==0.3.22
+pydub==0.25.1  # For audio duration calculation
+ffmpeg-python==0.2.0  # For audio processing with pydub
 
 # Dependencies required for compatibility
 anyio==3.7.1

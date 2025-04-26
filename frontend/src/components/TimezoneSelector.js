@@ -6,12 +6,9 @@ import {
   Typography, 
   Box, 
   Tooltip, 
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  useTheme
+  InputLabel,
+  Chip,
+  Paper
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { 
@@ -19,17 +16,16 @@ import {
   getUserTimezone, 
   setUserTimezone, 
   getCurrentTimeWithTimezone,
-  getTimezoneLabel 
+  getTimezoneLabel,
+  getTimezoneAbbreviation
 } from '../utils/dateUtils';
 
 /**
  * Component for displaying current time and selecting timezone
  */
 const TimezoneSelector = ({ compact = false, showIcon = true }) => {
-  const theme = useTheme();
   const [currentTimezone, setCurrentTimezone] = useState(getUserTimezone());
-  const [currentTime, setCurrentTime] = useState(getCurrentTimeWithTimezone());
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(getCurrentTimeWithTimezone(currentTimezone));
 
   // Update the time every second
   useEffect(() => {
@@ -45,7 +41,10 @@ const TimezoneSelector = ({ compact = false, showIcon = true }) => {
     const newTimezone = event.target.value;
     setCurrentTimezone(newTimezone);
     setUserTimezone(newTimezone);
-    setDialogOpen(false);
+    
+    // Force page refresh to update all displayed dates
+    // This is a simple approach - in a larger app, we might use context or Redux
+    window.location.reload();
   };
 
   // Compact view for header/small areas
@@ -58,54 +57,65 @@ const TimezoneSelector = ({ compact = false, showIcon = true }) => {
             sx={{ mr: 1, color: 'text.secondary' }} 
           />
         )}
-        <Tooltip 
-          title="Click to change timezone" 
-          arrow
-          placement="bottom"
+        <Paper 
+          elevation={0} 
+          variant="outlined" 
+          sx={{ 
+            px: 1.5, 
+            py: 0.5, 
+            mr: 2, 
+            borderRadius: 2,
+            display: 'flex',
+            alignItems: 'center',
+            bgcolor: 'background.default'
+          }}
         >
           <Typography 
-            variant="caption" 
-            color="text.secondary" 
-            sx={{ 
-              cursor: 'pointer',
-              '&:hover': {
-                color: theme.palette.primary.main,
-                textDecoration: 'underline'
-              }
-            }}
-            onClick={() => setDialogOpen(true)}
+            variant="body2" 
+            color="text.primary" 
+            fontWeight={500}
+            sx={{ mr: 1 }}
           >
-            {currentTime}
+            {currentTime} <span style={{ opacity: 0.6 }}>{getTimezoneAbbreviation(currentTimezone)}</span>
           </Typography>
-        </Tooltip>
+          <Chip
+            label={getTimezoneLabel(currentTimezone)}
+            size="small"
+            variant="outlined"
+            color="primary"
+            sx={{ height: 20, '& .MuiChip-label': { px: 1, py: 0 } }}
+          />
+        </Paper>
         
-        <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-          <DialogTitle>Select Timezone</DialogTitle>
-          <DialogContent sx={{ minWidth: 300 }}>
-            <FormControl fullWidth sx={{ mt: 1 }}>
-              <Select
-                value={currentTimezone}
-                onChange={handleTimezoneChange}
-                autoFocus
-              >
-                {AVAILABLE_TIMEZONES.map((tz) => (
-                  <MenuItem key={tz.value} value={tz.value}>
-                    {tz.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Typography variant="body2" sx={{ mt: 2, mb: 1 }}>
-              Current time in {getTimezoneLabel(currentTimezone)}:
-            </Typography>
-            <Typography variant="body1" fontWeight="medium">
-              {currentTime}
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          </DialogActions>
-        </Dialog>
+        <Tooltip title="Change timezone for date display" arrow>
+          <Box>
+            <Select
+              value={currentTimezone}
+              onChange={handleTimezoneChange}
+              size="small"
+              variant="outlined"
+              sx={{ 
+                minWidth: 120,
+                '& .MuiSelect-select': {
+                  py: 0.5,
+                  fontSize: '0.8rem'
+                }
+              }}
+            >
+              <MenuItem value="UTC" sx={{ fontWeight: 'bold' }}>
+                Universal Time (UTC)
+              </MenuItem>
+              <MenuItem disabled sx={{ opacity: 0.7, fontWeight: 'bold', fontSize: '0.7rem' }}>
+                ───── LOCAL TIMEZONES ─────
+              </MenuItem>
+              {AVAILABLE_TIMEZONES.map((tz) => (
+                <MenuItem key={tz.value} value={tz.value}>
+                  {tz.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
+        </Tooltip>
       </Box>
     );
   }
@@ -113,23 +123,56 @@ const TimezoneSelector = ({ compact = false, showIcon = true }) => {
   // Full view for settings/preference pages
   return (
     <Box sx={{ mb: 3 }}>
-      <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 1 }}>
+      <Typography variant="h6" gutterBottom>
         Timezone Settings
       </Typography>
+      <Typography variant="body2" color="text.secondary" gutterBottom>
+        Choose your preferred timezone for displaying meeting dates and times.
+        This will affect how all dates are displayed throughout the application.
+        <Box component="span" sx={{ fontWeight: 'bold', display: 'block', mt: 1 }}>
+          Note: Future dates will be displayed in UTC by default for consistency.
+        </Box>
+      </Typography>
       
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <AccessTimeIcon sx={{ mr: 1, color: 'text.secondary' }} />
+      <Paper 
+        elevation={0} 
+        variant="outlined" 
+        sx={{ 
+          p: 2, 
+          mb: 3, 
+          mt: 2, 
+          borderRadius: 2,
+          display: 'inline-block'
+        }}
+      >
         <Typography variant="body2" color="text.secondary">
-          Current time: {currentTime}
+          Current time:
         </Typography>
-      </Box>
+        <Typography variant="h5" sx={{ fontWeight: 500, my: 1 }}>
+          {currentTime} <span style={{ opacity: 0.7, fontSize: '0.8em' }}>{getTimezoneAbbreviation(currentTimezone)}</span>
+        </Typography>
+        <Chip
+          label={getTimezoneLabel(currentTimezone)}
+          color="primary"
+          size="small"
+        />
+      </Paper>
       
-      <FormControl fullWidth size="small">
+      <FormControl sx={{ minWidth: 250 }}>
+        <InputLabel id="timezone-select-label">Timezone</InputLabel>
         <Select
+          labelId="timezone-select-label"
+          id="timezone-select"
           value={currentTimezone}
+          label="Timezone"
           onChange={handleTimezoneChange}
-          displayEmpty
         >
+          <MenuItem value="UTC" sx={{ fontWeight: 'bold' }}>
+            Universal Time (UTC)
+          </MenuItem>
+          <MenuItem disabled sx={{ opacity: 0.7 }}>
+            ──────────────────
+          </MenuItem>
           {AVAILABLE_TIMEZONES.map((tz) => (
             <MenuItem key={tz.value} value={tz.value}>
               {tz.label}
@@ -137,10 +180,6 @@ const TimezoneSelector = ({ compact = false, showIcon = true }) => {
           ))}
         </Select>
       </FormControl>
-      
-      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-        Select your preferred timezone for displaying dates and times throughout the application.
-      </Typography>
     </Box>
   );
 };

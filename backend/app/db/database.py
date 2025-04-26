@@ -55,6 +55,7 @@ class Meeting(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     date = Column(DateTime, default=datetime.datetime.utcnow)
+    timezone = Column(String, default="UTC")  # Store timezone information
     audio_path = Column(String)
     audio_info = Column(Text, nullable=True)  # JSON string with audio file information
     transcription = Column(Text, nullable=True)
@@ -112,6 +113,11 @@ def update_database_schema():
             cursor.execute("ALTER TABLE meetings ADD COLUMN audio_duration TEXT")
             conn.commit()
             
+        if "timezone" not in columns:
+            print("Adding missing 'timezone' column to meetings table...")
+            cursor.execute("ALTER TABLE meetings ADD COLUMN timezone TEXT DEFAULT 'UTC'")
+            conn.commit()
+        
         print("Database schema updates completed.")
         
         # Close connection
