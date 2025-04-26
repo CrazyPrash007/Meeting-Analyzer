@@ -102,11 +102,8 @@ const TimezoneSelector = ({ compact = false, showIcon = true }) => {
                 }
               }}
             >
-              <MenuItem value="UTC" sx={{ fontWeight: 'bold' }}>
-                Universal Time (UTC)
-              </MenuItem>
               <MenuItem disabled sx={{ opacity: 0.7, fontWeight: 'bold', fontSize: '0.7rem' }}>
-                ───── LOCAL TIMEZONES ─────
+                ───── TIMEZONES ─────
               </MenuItem>
               {AVAILABLE_TIMEZONES.map((tz) => (
                 <MenuItem key={tz.value} value={tz.value}>
@@ -167,9 +164,6 @@ const TimezoneSelector = ({ compact = false, showIcon = true }) => {
           label="Timezone"
           onChange={handleTimezoneChange}
         >
-          <MenuItem value="UTC" sx={{ fontWeight: 'bold' }}>
-            Universal Time (UTC)
-          </MenuItem>
           <MenuItem disabled sx={{ opacity: 0.7 }}>
             ──────────────────
           </MenuItem>

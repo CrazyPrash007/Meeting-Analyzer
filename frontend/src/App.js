@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { CssBaseline, ThemeProvider, createTheme, Box } from '@mui/material';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -9,6 +9,7 @@ import UploadPage from './pages/UploadPage';
 import MeetingsListPage from './pages/MeetingsListPage';
 import MeetingDetailPage from './pages/MeetingDetailPage';
 import UserProfile from './pages/UserProfile';
+import './App.css';
 
 // Create a custom theme
 const theme = createTheme({
@@ -123,7 +124,7 @@ function App() {
       <div className="app">
         <div className="app-container">
           <Header />
-          <main>
+          <Box component="main" sx={{ flexGrow: 1, pt: { xs: 2, sm: 3, md: 4 } }}>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/upload" element={<UploadPage />} />
@@ -131,9 +132,18 @@ function App() {
               <Route path="/meetings/:meetingId" element={<MeetingDetailPage />} />
               <Route path="/profile" element={<UserProfile />} />
             </Routes>
-          </main>
+          </Box>
           <Footer />
-          <Toaster />
+          <Toaster 
+            position="bottom-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                borderRadius: '8px',
+                boxShadow: '0 3px 10px rgba(0,0,0,0.1)',
+              }
+            }}
+          />
         </div>
       </div>
     </ThemeProvider>

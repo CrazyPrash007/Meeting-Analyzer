@@ -49,6 +49,9 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { toast } from 'react-hot-toast';
 import { formatDateWithTimezone, getTimeAgo } from '../utils/dateUtils';
 import TimezoneSelector from '../components/TimezoneSelector';
+import AudioFileIcon from '@mui/icons-material/AudioFile';
+import MicNoneIcon from '@mui/icons-material/MicNone';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 
 // Tab panel component
 function TabPanel(props) {
@@ -101,33 +104,35 @@ const AudioInfoCard = ({ audioInfoStr, meeting }) => {
         </Box>
         <Grid container spacing={2}>
           {/* Recording Date */}
-          <Grid item xs={12} sm={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <EventIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-              <Typography variant="body2" color="text.primary" fontWeight={500}>
-                Recording Date:
+          {meeting?.date && (
+            <Grid item xs={12} sm={6}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <EventIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                <Typography variant="body2" color="text.primary" fontWeight={500}>
+                  Recording Date:
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
+                {formatDateWithTimezone(meeting?.date, meeting?.timezone)}
               </Typography>
-            </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
-              {formatDateWithTimezone(meeting?.date, meeting?.timezone)}
-            </Typography>
-            {isFutureDate && (
-              <Typography variant="caption" color="primary" sx={{ ml: 4, display: 'block', fontStyle: 'italic' }}>
-                Future date displayed in UTC for consistency
-              </Typography>
-            )}
-            {meeting?.date && !isFutureDate && (
-              <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
-                {getTimeAgo(meeting.date)}
-              </Typography>
-            )}
-          </Grid>
+              {isFutureDate && (
+                <Typography variant="caption" color="primary" sx={{ ml: 4, display: 'block', fontStyle: 'italic' }}>
+                  Future date displayed in UTC for consistency
+                </Typography>
+              )}
+              {meeting?.date && !isFutureDate && (
+                <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
+                  {getTimeAgo(meeting.date)}
+                </Typography>
+              )}
+            </Grid>
+          )}
 
           {/* Original Timezone (if available) */}
           {meeting?.timezone && (
             <Grid item xs={12} sm={6}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <EventIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                <LanguageIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                 <Typography variant="body2" color="text.primary" fontWeight={500}>
                   Original Timezone:
                 </Typography>
@@ -172,6 +177,7 @@ const AudioInfoCard = ({ audioInfoStr, meeting }) => {
           {audioInfo?.audio_format && (
             <Grid item xs={12} sm={6}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <AudioFileIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                 <Typography variant="body2" color="text.primary" fontWeight={500}>
                   Format:
                 </Typography>
@@ -186,6 +192,7 @@ const AudioInfoCard = ({ audioInfoStr, meeting }) => {
           {audioInfo?.file_size_mb && (
             <Grid item xs={12} sm={6}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <InsertDriveFileIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                 <Typography variant="body2" color="text.primary" fontWeight={500}>
                   File Size:
                 </Typography>
@@ -200,10 +207,13 @@ const AudioInfoCard = ({ audioInfoStr, meeting }) => {
         {/* Speaker Information */}
         {audioInfo?.speakers && audioInfo.speakers.length > 0 && (
           <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" sx={{ mb: 1 }} color="text.primary" fontWeight={500}>
-              Speakers:
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <MicNoneIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+              <Typography variant="body2" color="text.primary" fontWeight={500}>
+                Speakers:
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, ml: 4 }}>
               {audioInfo.speakers.map((speaker, index) => (
                 <Chip 
                   key={index} 

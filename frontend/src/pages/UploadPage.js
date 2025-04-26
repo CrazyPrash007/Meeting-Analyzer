@@ -10,17 +10,16 @@ import {
   CircularProgress,
   Card,
   CardContent,
-  Divider,
   useTheme,
   Grid,
   Chip,
-  Stack
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AudioFileIcon from '@mui/icons-material/AudioFile';
 import MicNoneIcon from '@mui/icons-material/MicNone';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import EventIcon from '@mui/icons-material/Event';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/api';
 import { useDropzone } from 'react-dropzone';
@@ -262,56 +261,68 @@ const UploadPage = () => {
             )}
           </Box>
           
+          {/* File Info Card */}
           {fileInfo && (
             <Card 
               variant="outlined" 
               sx={{ 
-                mb: 4, 
-                border: '1px solid',
-                borderColor: 'primary.main',
+                mb: 4,
                 borderRadius: 2,
-                backgroundColor: 'primary.main',
-                backgroundImage: `linear-gradient(135deg, ${theme.palette.primary.light}40, ${theme.palette.primary.main}10)`,
+                borderColor: 'primary.light',
+                backgroundColor: 'background.paper',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
               }}
             >
               <CardContent>
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'medium', color: 'primary.main' }}>
+                  Audio File Information
+                </Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <InsertDriveFileIcon color="primary" />
-                      <Typography variant="subtitle1" fontWeight={600}>
-                        Selected File Information
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                      <AudioFileIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                      <Typography variant="body2" color="text.primary" fontWeight={500}>
+                        File Name:
                       </Typography>
-                    </Stack>
-                    <Divider sx={{ my: 1.5 }} />
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>Name:</strong>
-                    </Typography>
-                    <Typography variant="body2">
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
                       {fileInfo.name}
                     </Typography>
                   </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>Type:</strong>
-                    </Typography>
-                    <Typography variant="body2">
-                      {fileInfo.type}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>Size:</strong>
-                    </Typography>
-                    <Typography variant="body2">
+                  
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                      <InsertDriveFileIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                      <Typography variant="body2" color="text.primary" fontWeight={500}>
+                        File Size:
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
                       {fileInfo.size}
                     </Typography>
                   </Grid>
-                  <Grid item xs={12}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
-                      Language will be automatically detected during processing
+                  
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                      <AudioFileIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                      <Typography variant="body2" color="text.primary" fontWeight={500}>
+                        File Type:
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
+                      {fileInfo.type}
+                    </Typography>
+                  </Grid>
+                  
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                      <EventIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                      <Typography variant="body2" color="text.primary" fontWeight={500}>
+                        Last Modified:
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
+                      {fileInfo.lastModified}
                     </Typography>
                   </Grid>
                 </Grid>

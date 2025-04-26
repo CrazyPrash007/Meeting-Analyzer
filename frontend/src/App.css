@@ -1,0 +1,36 @@
+/* Global app styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+  /* Add padding to prevent content from being hidden under the fixed header */
+  padding-top: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  main {
+    padding-top: 12px;
+  }
+}
+
+/* Smooth scrolling for the whole page */
+html {
+  scroll-behavior: smooth;
+} 
