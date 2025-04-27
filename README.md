@@ -41,6 +41,14 @@ meeting-analyzer/
 │   └── pdfs/                 # Generated PDF files (created on runtime)
 ```
 
+## Logic Flowchart
+
+Here’s a visual overview of the application's flow:
+
+<p align="center">
+  <img src="https://drive.google.com/uc?export=view&id=1_MEg96UMpASxldT-lq6bDI471ShWxUPh" alt="Meeting Analyzer Logic Flowchart">
+</p>
+
 ## Prerequisites
 
 - Python 3.8+
